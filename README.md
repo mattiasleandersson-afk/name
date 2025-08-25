@@ -5,8 +5,7 @@
 Ett enkelt träningsprogram för att lära sig namn kopplade till bilder.
 
 ## 🚀 Kom igång
-1. Öppna sidan i din webbläsare: [https://DITTANV.github.io/namntraning/](https://DITTANV.github.io/namntraning/)  
-   *(byt `DITTANV` mot ditt GitHub-användarnamn)*
+1. Öppna sidan i din webbläsare: [[https://DITTANV.github.io/name](https://mattiasleandersson-afk.github.io/name/)/](https://DITTANV.github.io/namne/)  
 
 2. Klicka **Hantera** för att:
    - Ladda upp bilder (via knappen eller dra & släpp).
@@ -27,7 +26,7 @@ Ett enkelt träningsprogram för att lära sig namn kopplade till bilder.
 - Topp 5 svåraste visas under Statistik.
 - Statistik sparas lokalt i webbläsaren (LocalStorage).
 - Knappar:
-  - **Exportera**: spara data (JSON).
+  - **Exportera**: spara data (JSON). Denna fil lagras lokalt på din dator, inget sparas online.
   - **Importera**: ersätt allt med ny data.
   - **Importera (slå ihop)**: kombinera ny data med befintlig.
   - **Nollställ statistik**: nollställer enbart statistiken.
