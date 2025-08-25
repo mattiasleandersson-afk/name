@@ -5,7 +5,7 @@
 Ett enkelt träningsprogram för att lära sig namn kopplade till bilder.
 
 ## 🚀 Kom igång
-1. Öppna sidan i din webbläsare: [[https://DITTANV.github.io/name](https://mattiasleandersson-afk.github.io/name/)/](https://DITTANV.github.io/namne/)  
+1. Öppna sidan i din webbläsare: https://mattiasleandersson-afk.github.io/name/
 
 2. Klicka **Hantera** för att:
    - Ladda upp bilder (via knappen eller dra & släpp).
