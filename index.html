@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Namnträning</title>
+<style>
+  :root{
+    --bg:#0b1222; --panel:#0f162a; --panel-2:#0c1b34;
+    --ink:#e6e9f0; --muted:#2a3b57; --muted-2:#3a4b6b;
+    --accent:#22c55e; --accent-2:#16a34a; --danger:#ef4444; --danger-2:#b91c1c;
+    --ring:#60a5fa; --shadow:0 6px 24px rgba(0,0,0,.35), 0 2px 8px rgba(0,0,0,.25);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:radial-gradient(1200px 600px at 20% -10%, #10213f 0%, #0b1222 60%), var(--bg);color:var(--ink);font:15px/1.5 system-ui, -apple-system, Segoe UI, Roboto}
+  .wrap{max-width:1150px;margin:24px auto;padding:16px}
+  .app{
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)) , var(--panel);
+    border:1px solid var(--muted);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)
+  }
+
+  header{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+    padding:14px 16px;border-bottom:1px solid var(--muted);
+    background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0)), var(--panel-2)
+  }
+  h1{margin:0;font-size:18px;letter-spacing:.2px;display:flex;align-items:center;gap:8px}
+  h1::after{content:"";display:inline-block;width:6px;height:6px;border-radius:999px;background:var(--accent);margin-left:4px;box-shadow:0 0 12px var(--accent)}
+
+  .btn{
+    border:1px solid var(--muted-2);background:#14213b;color:var(--ink);
+    padding:8px 12px;border-radius:10px;cursor:pointer;transition:all .15s ease;line-height:1;display:inline-flex;gap:8px;align-items:center
+  }
+  .btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,0,0,.25);border-color:#4b5d82}
+  .btn:active{transform:translateY(0)}
+  .btn:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+  .primary{background:linear-gradient(180deg, var(--accent), var(--accent-2));border-color:transparent;color:#03120a}
+  .danger{background:linear-gradient(180deg, var(--danger), var(--danger-2));border-color:transparent;color:#fff}
+
+  .pill{background:#1b2745;border:1px solid var(--muted);padding:6px 10px;border-radius:999px}
+
+  .genderFilter{display:inline-flex;border:1px solid var(--muted-2);border-radius:999px;overflow:hidden}
+  .genderFilter button{border:0;background:transparent;color:var(--ink);padding:8px 12px;font-size:13px;cursor:pointer}
+  .genderFilter button+button{border-left:1px solid var(--muted-2)}
+  .genderFilter .active{background:#1c2a4d}
+
+  section{padding:12px 16px}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 12px}
+  .hint{font-size:12px;color:#aab6ce}
+  #count-pill{background:#1b2745;border:1px solid var(--muted);padding:6px 10px;border-radius:999px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+  .card{border:1px solid var(--muted);border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)), #091427;
+    display:flex;flex-direction:column;overflow:hidden;transition:transform .15s ease, box-shadow .15s ease}
+  .card:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.35)}
+  .pan{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;cursor:grab;background:#0b1222}
+  .pan:active{cursor:grabbing}
+  .pan img{
+    position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;user-select:none;pointer-events:none;transform-origin:center center;
+    transition:transform .08s linear, object-position .08s linear
+  }
+  .pan .overlay{
+    position:absolute;left:8px;top:8px;background:rgba(2,6,23,.55);border:1px solid var(--muted);padding:4px 8px;border-radius:8px;font-size:12px;color:#e5e7eb;backdrop-filter: blur(4px)
+  }
+
+  .namebox{padding:10px;border-top:1px solid var(--muted);display:flex;flex-direction:column;gap:8px}
+  .namebox input,.namebox textarea{
+    border:1px solid var(--muted);background:#0c1627;color:#e5e7eb;border-radius:10px;padding:9px 10px;font-size:14px
+  }
+  .namebox textarea{min-height:56px;resize:vertical}
+  .namebox input:focus,.namebox textarea:focus{outline:none;border-color:var(--ring);box-shadow:0 0 0 2px rgba(96,165,250,.25)}
+  .clear{border:1px solid var(--muted);background:#1f2937;color:#e5e7eb;border-radius:10px;padding:8px;cursor:pointer}
+  .genderRow{display:flex;gap:8px}
+  .genderRow button{flex:1;padding:7px 10px;border-radius:10px;border:1px solid var(--muted);background:#1e2a44;color:#e5e7eb;cursor:pointer;font-size:13px}
+  .genderRow button.active-m{background:#3b82f6;color:#fff;border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.2) inset}
+  .genderRow button.active-f{background:#ec4899;color:#fff;border-color:#ec4899;box-shadow:0 0 0 2px rgba(236,72,153,.2) inset}
+
+  #grid[dragover]{outline:2px dashed #3b82f6;outline-offset:6px;border-radius:12px}
+
+  #quiz .controls{text-align:center;margin:8px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  #progress{text-align:center;margin-top:4px;color:#cbd5e1}
+  .barWrap{max-width:560px;margin:6px auto 0;background:#0e1a33;border:1px solid var(--muted);height:8px;border-radius:999px;overflow:hidden}
+  .bar{height:100%;width:0%;background:linear-gradient(90deg, var(--accent), #7ee787);transition:width .25s}
+
+  .qaRow{display:flex;gap:16px;align-items:flex-start;justify-content:center;flex-wrap:wrap;margin-top:8px}
+  .imgBox{width:280px;position:relative}
+  #quiz-img, #quiz-img-text{width:100%;display:block;border-radius:12px;box-shadow:var(--shadow);object-fit:cover}
+  .hintline{position:absolute;left:0;right:0;bottom:-26px;text-align:center;font-size:14px;color:#eaeff9;opacity:.95;min-height:20px}
+  .hintline b{color:#fcd34d}
+
+  .choices{display:grid;gap:10px;width:360px;align-content:start}
+  .choice{border:1px solid var(--muted);border-radius:10px;background:#0b1222;cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:46px;padding:8px 10px;font-size:14px;text-align:center;transition:all .15s}
+  .choice:hover{border-color:#5a6e93;transform:translateY(-1px)}
+  .choice.correct{border-color:var(--accent);box-shadow:0 0 0 2px rgba(34,197,94,.2) inset}
+  .choice.wrong{border-color:#ef4444;box-shadow:0 0 0 2px rgba(239,68,68,.2) inset}
+
+  /* === Namn→Bild === */
+  .imgChoices{display:grid;gap:10px;max-width:560px;margin:16px auto 0}
+  .imgChoice{border:1px solid var(--muted);border-radius:12px;background:#0b1222;cursor:pointer;padding:4px;transition:all .15s}
+  .imgChoice:hover{transform:translateY(-1px);border-color:#5a6e93}
+  .thumbPan{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;background:#0b1222;border-radius:10px}
+  .thumbPan img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;border-radius:10px;transform-origin:center center}
+  .nameOverlay{
+    position:absolute;left:6px;right:6px;bottom:6px;
+    background:rgba(4,20,39,.68);border:1px solid var(--muted);
+    padding:6px 10px;border-radius:10px;font-weight:800;text-align:center;
+    box-shadow:0 0 0 2px rgba(34,197,94,.18), 0 0 18px rgba(34,197,94,.2);
+  }
+  .countdownPill{
+    position:absolute;right:6px;top:6px;
+    background:rgba(0,0,0,.5);border:1px solid var(--muted);
+    border-radius:999px;padding:3px 8px;font-size:12px
+  }
+
+  .imgChoice.correct{border-color:var(--accent);box-shadow:0 0 0 2px rgba(34,197,94,.2) inset}
+  .imgChoice.wrong{border-color:#ef4444;box-shadow:0 0 0 2px rgba(239,68,68,.2) inset}
+  .imgChoice.disabled{opacity:.35;filter:grayscale(40%);pointer-events:none}
+
+  .quizName{font-size:20px;font-weight:700;text-align:center;margin-top:6px}
+
+  .feedback{text-align:center;font-weight:900;font-size:22px;margin-top:12px;min-height:28px;letter-spacing:.3px}
+  .ok{color:var(--accent);animation:pop .25s ease}
+  .bad{color:#ef4444;animation:pop .25s ease}
+  @keyframes pop{0%{transform:scale(.95);opacity:.6}100%{transform:scale(1);opacity:1}}
+
+  .btn input[type="checkbox"]{width:16px;height:16px;accent-color:var(--accent)}
+  .hintBtn{font-size:13px}
+
+  .freeWrap{display:flex;flex-direction:column;gap:10px;align-items:stretch;width:360px}
+  .freeWrap input{
+    border:1px solid var(--muted);background:#0c1627;color:#e5e7eb;border-radius:10px;padding:10px 12px;font-size:16px
+  }
+  .freeWrap input:focus{outline:none;border-color:var(--ring);box-shadow:0 0 0 2px rgba(96,165,250,.25)}
+  .freeWrap .row{display:flex;gap:8px}
+  .freeWrap .row .btn{flex:1}
+  @media (max-width:720px){ .imgBox{width:100%}.choices,.freeWrap{width:100%} }
+
+  /* === Review/Genomgång === */
+  #review{padding:10px 0;display:none}
+  #review h3{margin:8px 0 10px;font-size:16px;text-align:center}
+  .reviewGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:0 6px}
+  .revCard{position:relative;border:1px solid var(--muted);border-radius:12px;background:#0b1222;overflow:hidden}
+  .revCard img{width:100%;height:120px;object-fit:cover;display:block}
+  .revName{position:absolute;left:8px;bottom:8px;background:rgba(2,6,23,.6);border:1px solid var(--muted);padding:4px 8px;border-radius:8px;font-size:13px;color:#e5e7eb;backdrop-filter: blur(4px)}
+  .reviewActions{display:flex;gap:10px;justify-content:center;margin-top:12px}
+
+  /* === Statistik === */
+  #stats{display:none;padding:12px 16px;border-top:1px solid var(--muted);background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)), #0b1428}
+  #stats h3{margin:0 0 8px}
+  .statList{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+  .statCard{border:1px solid var(--muted);border-radius:10px;padding:10px;background:#0c172d;display:flex;gap:10px;align-items:flex-start}
+  .statThumbWrap{position:relative;width:64px;aspect-ratio:1/1;overflow:hidden;border-radius:10px;border:1px solid var(--muted);flex:0 0 64px;background:#0b1222}
+  .statThumbWrap img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;transform-origin:center center}
+  .statBody{display:flex;flex-direction:column;gap:4px}
+  .statBody b{margin:0}
+  .small{font-size:12px;color:#aab6ce}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="app">
+    <header>
+      <h1>📸 Namnträning</h1>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="btn" id="mode-manage">Hantera</button>
+        <button class="btn primary" id="mode-quiz">Quiz</button>
+        <div class="genderFilter" id="headerFilter">
+          <button data-g="all">Alla</button>
+          <button data-g="m">Killar</button>
+          <button data-g="f">Tjejer</button>
+        </div>
+        <button class="btn" id="btn-stats">Statistik</button>
+        <button class="btn" id="btn-export">Exportera</button>
+        <label class="btn" for="import-file">Importera</label>
+        <input id="import-file" type="file" accept="application/json" style="display:none"/>
+        <label class="btn" for="import-merge-file">Importera (slå ihop)</label>
+        <input id="import-merge-file" type="file" accept="application/json" style="display:none"/>
+        <button class="btn" id="btn-reset-stats" title="Nollställ endast statistik">Nollställ statistik</button>
+        <button class="btn danger" id="btn-clear-all" title="Rensa bilder & namn (statistik sparas)">Rensa</button>
+        <span class="pill" id="count-pill">0 bilder</span>
+      </div>
+    </header>
+
+    <div id="stats"></div>
+
+    <!-- Hantera -->
+    <section id="manage">
+      <div class="toolbar">
+        <div style="display:flex;align-items:center;gap:8px">
+          <label class="btn" for="file">📁 Välj bilder</label>
+          <input id="file" type="file" accept="image/*" multiple style="display:none"/>
+          <span class="hint">eller dra & släpp i rutnätet</span>
+        </div>
+      </div>
+      <div class="grid" id="grid" title="Dra hit bilder"></div>
+    </section>
+
+    <!-- Quiz -->
+    <section id="quiz" style="display:none">
+      <div class="controls">
+        <button class="btn" id="qmode-img2name">Bild→Namn</button>
+        <button class="btn" id="qmode-name2img">Namn→Bild</button>
+        <button class="btn" id="qmode-text">Skriv namn</button>
+        <button class="btn" id="redo">Blanda igen</button>
+        <label class="btn" style="display:flex;gap:6px;align-items:center">
+          <input type="checkbox" id="same-gender-only"/>
+          Könsfiltrera alternativ
+        </label>
+        <label class="btn" style="display:flex;gap:6px;align-items:center">
+          <input type="checkbox" id="auto-choices"/>
+          Auto-antal alternativ
+        </label>
+        <label class="btn" style="display:flex;gap:6px;align-items:center">
+          <input type="checkbox" id="time-challenge"/>
+          Tidsutmaning
+        </label>
+        <button class="btn hintBtn" id="btn-hint" title="Visa ledtråd">💡 Ledtråd</button>
+      </div>
+
+      <div id="progress"></div>
+      <div class="barWrap"><div class="bar" id="progressBar"></div></div>
+
+      <!-- Bild→Namn -->
+      <div id="pane-img2name">
+        <div class="qaRow">
+          <div class="imgBox">
+            <img id="quiz-img" />
+            <div class="hintline" id="hintline"></div>
+          </div>
+          <div class="choices" id="choices"></div>
+        </div>
+      </div>
+
+      <!-- Namn→Bild -->
+      <div id="pane-name2img" style="display:none">
+        <div class="quizName" id="quiz-name"></div>
+        <div class="imgChoices" id="img-choices"></div>
+      </div>
+
+      <!-- Bild→Fritext -->
+      <div id="pane-text" style="display:none">
+        <div class="qaRow">
+          <div class="imgBox">
+            <img id="quiz-img-text" />
+            <div class="hintline" id="hintline-text"></div>
+          </div>
+          <div class="freeWrap">
+            <input id="answer-input" placeholder="Skriv namnet här…" autocomplete="off"/>
+            <div class="row">
+              <button class="btn primary" id="btn-submit">Svara</button>
+              <button class="btn" id="btn-skip">Hoppa över</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+
+      <!-- Genomgång av fel efter omgång -->
+      <div id="review">
+        <h3>Genomgång av fel</h3>
+        <div class="reviewGrid" id="review-grid"></div>
+        <div class="reviewActions">
+          <button class="btn primary" id="btn-review-repeat">Öva bara på dessa</button>
+          <button class="btn" id="btn-review-back">Till hantera</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+/* ======= State ======= */
+let photos=[]; // {id,data,name,gender,posX,posY,zoom,mnemonic,stats}
+let filterGender=localStorage.getItem('filterGender')||'all';
+let sameGenderOnly=(localStorage.getItem('sameGenderOnly')==='true');
+let autoChoices=(localStorage.getItem('autoChoices')!=='false'); // default true
+let timeChallenge=(localStorage.getItem('timeChallenge')==='true'); // default false
+let quizMode='img2name'; // 'img2name'|'name2img'|'img2text'
+let quizList=[], quizIndex=0, wrongs=[];
+let hintLevel=0, usedHint=false;
+let qStart=0, timerId=null;
+
+/* ======= Storage (statistik) ======= */
+const STATS_KEY='namntraning_stats_v1';
+function loadStatsFromStorage(){
+  try{
+    const raw=localStorage.getItem(STATS_KEY);
+    if(!raw) return {};
+    return JSON.parse(raw)||{};
+  }catch{ return {}; }
+}
+function persistStats(){
+  const map={};
+  for(const p of photos){
+    if(!p.id) continue;
+    if(p.stats){
+      map[p.id]=p.stats;
+    }
+  }
+  try{ localStorage.setItem(STATS_KEY, JSON.stringify(map)); }catch{}
+}
+function mergeStatsFromStorage(){
+  const map=loadStatsFromStorage();
+  for(const p of photos){
+    if(map[p.id]) p.stats = {...map[p.id]};
+  }
+}
+
+/* ======= Helpers ======= */
+const $=s=>document.querySelector(s);
+function uid(){return Math.random().toString(36).slice(2);}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+function countText(){ $("#count-pill").textContent=`${photos.length} bilder`; }
+function setHeaderFilterActive(){ $("#headerFilter").querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.dataset.g===filterGender)); }
+function ensurePanDefaults(p){ if(typeof p.posX!=='number') p.posX=50; if(typeof p.posY!=='number') p.posY=50; if(typeof p.zoom!=='number') p.zoom=1; }
+function applyPanZoomEl(img, p){ ensurePanDefaults(p); img.style.objectPosition = `${clamp(p.posX,0,100)}% ${clamp(p.posY,0,100)}%`; img.style.transformOrigin='center center'; img.style.transform=`scale(${clamp(p.zoom,1,3)})`; }
+function setProgress(){ const total=quizList.length||1; const idx=Math.min(quizIndex+1,total); $("#progress").textContent=`${idx}/${total}`; $("#progressBar").style.width = `${(idx/total)*100}%`; }
+function now(){ return performance.now(); }
+
+/* Fuzzy-normalisering + Levenshtein */
+function normalizeName(s){
+  return (s||"")
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[-_.]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+function editDistance(a, b){
+  const n=a.length, m=b.length;
+  if(n===0) return m; if(m===0) return n;
+  const dp=new Array(m+1); for(let j=0;j<=m;j++) dp[j]=j;
+  for(let i=1;i<=n;i++){
+    let prev=dp[0]; dp[0]=i;
+    for(let j=1;j<=m;j++){
+      const tmp=dp[j];
+      dp[j] = Math.min(dp[j]+1, dp[j-1]+1, prev + (a[i-1]===b[j-1]?0:1));
+      prev=tmp;
+    }
+  }
+  return dp[m];
+}
+function isFuzzyMatch(ansRaw, correctRaw){
+  const ans = normalizeName(ansRaw);
+  const cor = normalizeName(correctRaw);
+  if(!ans || !cor) return false;
+  if(ans === cor) return true;
+  const dist = editDistance(ans, cor);
+  const tol = cor.length <= 5 ? 1 : 2;
+  const prefixOk = ans.length >= 3 && cor.startsWith(ans);
+  return dist <= tol || prefixOk;
+}
+
+/* ======= Stats ======= */
+function ensureStats(p){
+  if(!p.stats) p.stats={attempts:0, correct:0, wrong:0, hints:0, avgRT:0, level:0, streak:0, lastAt:Date.now()};
+}
+function updateStats(p,{correct, rtSec}){
+  ensureStats(p);
+  p.stats.attempts++;
+  if(usedHint) p.stats.hints++;
+  if(correct){
+    p.stats.correct++;
+    p.stats.streak++;
+    p.stats.level = Math.min((p.stats.level||0)+1, 2);
+  }else{
+    p.stats.wrong++;
+    p.stats.streak = 0;
+    p.stats.level = Math.max((p.stats.level||0)-1, 0);
+  }
+  if(rtSec>0){
+    p.stats.avgRT = p.stats.avgRT? (p.stats.avgRT*0.8 + rtSec*0.2) : rtSec;
+  }
+  p.stats.lastAt = Date.now();
+  persistStats();
+}
+function difficultyScore(p){
+  ensureStats(p);
+  const a=p.stats.attempts||0, w=p.stats.wrong||0, h=p.stats.hints||0;
+  const wrongRate = a? (w/a):0;
+  const hintRate  = a? (h/a):0;
+  const rt = Math.min(p.stats.avgRT||0, 5);
+  return wrongRate + 0.5*hintRate + 0.2*(rt/5);
+}
+function topHardest(n=5){
+  return photos.filter(p=>p.name).sort((a,b)=>difficultyScore(b)-difficultyScore(a)).slice(0,n);
+}
+
+/* ======= Manage grid ======= */
+function renderGrid(){
+  const grid=$("#grid"); grid.innerHTML='';
+  let list=photos.slice();
+  if(filterGender!=='all') list=list.filter(p=>p.gender===filterGender);
+
+  for(const p of list){
+    const card=document.createElement('div'); card.className='card';
+    const pan=document.createElement('div'); pan.className='pan';
+    const img=document.createElement('img'); img.src=p.data; applyPanZoomEl(img,p);
+    const overlay=document.createElement('div'); overlay.className='overlay'; overlay.textContent=p.name||'Inget namn';
+    pan.append(img, overlay);
+
+    // Drag pan
+    let dragging=false, startX=0, startY=0, startPosX=p.posX||50, startPosY=p.posY||50;
+    pan.addEventListener('mousedown',e=>{ dragging=true; pan.style.cursor='grabbing'; startX=e.clientX; startY=e.clientY; startPosX=p.posX||50; startPosY=p.posY||50; e.preventDefault();});
+    window.addEventListener('mousemove',e=>{
+      if(!dragging) return;
+      const rect=pan.getBoundingClientRect();
+      const dx=e.clientX-startX, dy=e.clientY-startY;
+      p.posX = clamp(startPosX - (dx/rect.width)*100, 0, 100);
+      p.posY = clamp(startPosY - (dy/rect.height)*100, 0, 100);
+      applyPanZoomEl(img,p);
+    });
+    window.addEventListener('mouseup',()=>{ dragging=false; pan.style.cursor='grab'; });
+
+    // Wheel zoom
+    pan.addEventListener('wheel',e=>{
+      e.preventDefault();
+      let z=p.zoom||1; z += (e.deltaY<0)?0.1:-0.1; p.zoom=clamp(z,1,3); applyPanZoomEl(img,p);
+    }, {passive:false});
+
+    // Reset
+    pan.addEventListener('dblclick',()=>{ p.posX=50;p.posY=50;p.zoom=1; applyPanZoomEl(img,p); });
+
+    // Namn + kön + mnemonic + rensa-namn
+    const namebox=document.createElement('div'); namebox.className='namebox';
+    const input=document.createElement('input'); input.placeholder='Skriv namn här…'; input.value=p.name||'';
+    input.addEventListener('input',()=>{ p.name=input.value; overlay.textContent=p.name||'Inget namn'; });
+    const memo=document.createElement('textarea'); memo.placeholder='Minnesregel (valfritt)…'; memo.value=p.mnemonic||''; memo.addEventListener('input',()=>{ p.mnemonic=memo.value; });
+    const genderRow=document.createElement('div'); genderRow.className='genderRow';
+    const btnM=document.createElement('button'); btnM.textContent='Kille';
+    const btnF=document.createElement('button'); btnF.textContent='Tjej';
+    function refreshGender(){ btnM.classList.toggle('active-m',p.gender==='m'); btnF.classList.toggle('active-f',p.gender==='f'); }
+    btnM.onclick=()=>{ p.gender=(p.gender==='m'?null:'m'); refreshGender(); };
+    btnF.onclick=()=>{ p.gender=(p.gender==='f'?null:'f'); refreshGender(); };
+    refreshGender(); genderRow.append(btnM,btnF);
+    const clear=document.createElement('button'); clear.className='clear'; clear.textContent='✕ Rensa namn';
+    clear.onclick=()=>{ p.name=''; input.value=''; overlay.textContent='Inget namn'; };
+    namebox.append(input, memo, genderRow, clear);
+
+    card.append(pan, namebox);
+    grid.append(card);
+  }
+  countText();
+  renderStats();
+}
+
+/* ======= Import/Export ======= */
+function fileToDataURL(file){
+  return new Promise((resolve,reject)=>{
+    const fr=new FileReader();
+    fr.onerror=()=>reject(new Error('Läsfel'));
+    fr.onload=()=>resolve(fr.result);
+    fr.readAsDataURL(file);
+  });
+}
+async function handleFiles(files){
+  const arr=[...files];
+  for(const f of arr){
+    if(!f.type.startsWith('image/')) continue;
+    const data=await fileToDataURL(f);
+    photos.push({id:uid(), data, name:'', gender:null, posX:50, posY:50, zoom:1, mnemonic:'', stats:{attempts:0,correct:0,wrong:0,hints:0,avgRT:0,level:0,streak:0,lastAt:Date.now()}});
+  }
+  persistStats();
+  renderGrid();
+}
+function exportJSON(){
+  const safePhotos = photos.map(p=>({
+    id: p.id, data: p.data, name: p.name||'',
+    gender: p.gender ?? null, posX: p.posX ?? 50, posY: p.posY ?? 50, zoom: p.zoom ?? 1,
+    mnemonic: p.mnemonic || '',
+    stats: p.stats || {attempts:0,correct:0,wrong:0,hints:0,avgRT:0,level:0,streak:0,lastAt:Date.now()}
+  }));
+  const blob=new Blob([JSON.stringify({photos:safePhotos}, null, 2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='namntraning-data.json'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),500);
+}
+function mergeTwoStats(a,b){
+  const attempts = (a.attempts||0)+(b.attempts||0);
+  const correct  = (a.correct||0)+(b.correct||0);
+  const wrong    = (a.wrong||0)+(b.wrong||0);
+  const hints    = (a.hints||0)+(b.hints||0);
+  const avgRTa   = a.avgRT||0, avgRTb=b.avgRT||0;
+  const avgRT = attempts>0
+    ? ((avgRTa*(a.attempts||0) + avgRTb*(b.attempts||0)) / Math.max(1,(a.attempts||0)+(b.attempts||0)))
+    : 0;
+  const level = Math.max(a.level||0, b.level||0);
+  const streak= Math.max(a.streak||0, b.streak||0);
+  const lastAt= Math.max(a.lastAt||0, b.lastAt||0);
+  return {attempts, correct, wrong, hints, avgRT, level, streak, lastAt};
+}
+function parseIncoming(frResult){
+  const obj=JSON.parse(frResult);
+  if(!obj || !Array.isArray(obj.photos)) throw new Error('Fel format (saknar photos)');
+  return obj.photos.map(p=>({
+    id:p.id||uid(), data:p.data, name:p.name||'', gender:p.gender??null,
+    posX: typeof p.posX==='number'?p.posX:50,
+    posY: typeof p.posY==='number'?p.posY:50,
+    zoom: typeof p.zoom==='number'?p.zoom:1,
+    mnemonic: p.mnemonic || '',
+    stats: p.stats || {attempts:0,correct:0,wrong:0,hints:0,avgRT:0,level:0,streak:0,lastAt:Date.now()}
+  }));
+}
+function mergeInPlace(incoming){
+  let added=0, updated=0;
+  for(const np of incoming){
+    const exists = photos.find(p=>p.data===np.data);
+    if(exists){
+      if(!exists.name && np.name) exists.name=np.name;
+      if(!exists.gender && np.gender) exists.gender=np.gender;
+      if(!exists.mnemonic && np.mnemonic) exists.mnemonic=np.mnemonic;
+      if((exists.posX===undefined||exists.posX===50) && (exists.posY===undefined||exists.posY===50) && (exists.zoom===undefined||exists.zoom===1)){
+        exists.posX=np.posX; exists.posY=np.posY; exists.zoom=np.zoom;
+      }
+      exists.stats = mergeTwoStats(exists.stats||{}, np.stats||{});
+      updated++;
+    }else{
+      if(photos.some(p=>p.id===np.id)) np.id=uid();
+      photos.push(np); added++;
+    }
+  }
+  persistStats();
+  renderGrid();
+  alert(`Import (sammanfogning) klar.\nTillagda: ${added}\nUppdaterade: ${updated}`);
+}
+function importJSONFile(file, mode='replace'){
+  const fr=new FileReader();
+  fr.onload=()=>{
+    try{
+      const incoming = parseIncoming(fr.result);
+      if(mode==='merge'){
+        mergeInPlace(incoming);
+        return;
+      }
+      if(mode==='replace'){
+        photos = incoming;
+        mergeStatsFromStorage(); // behåll ev. lokal statistik per id
+        renderGrid();
+        alert('Import klar (ersatte allt).');
+        return;
+      }
+    }catch(e){ alert('Kunde inte importera: '+e.message); }
+  };
+  fr.readAsText(file);
+}
+
+/* ======= Stats-panel ======= */
+function renderStats(){
+  const box=$("#stats");
+  if(box.style.display==='none') return;
+  const hardest=topHardest(5);
+
+  const title=document.createElement('h3');
+  title.textContent='📊 Topp 5 svåraste namn';
+  const list=document.createElement('div');
+  list.className='statList';
+
+  if(hardest.length===0){
+    const empty=document.createElement('div');
+    empty.className='small';
+    empty.textContent='Lägg till och namnge några bilder först.';
+    box.innerHTML='';
+    box.append(title, empty);
+    return;
+  }
+
+  hardest.forEach(p=>{
+    const card=document.createElement('div'); card.className='statCard';
+
+    const thumbWrap=document.createElement('div'); thumbWrap.className='statThumbWrap';
+    const img=document.createElement('img'); img.alt=p.name||'(namn saknas)'; img.src=p.data; applyPanZoomEl(img,p);
+    thumbWrap.append(img);
+
+    const body=document.createElement('div'); body.className='statBody';
+    const nameEl=document.createElement('b'); nameEl.textContent=p.name||'(namn saknas)';
+    const sm=document.createElement('div'); sm.className='small';
+    const a=p.stats.attempts||0, c=p.stats.correct||0, w=p.stats.wrong||0, h=p.stats.hints||0;
+    const acc = a? Math.round((c/a)*100):0;
+    const sc = difficultyScore(p);
+    const rt = (p.stats.avgRT||0).toFixed(2);
+    sm.innerHTML = `Svårighetsindex: ${sc.toFixed(2)}<br/>Försök: ${a}, Rätt: ${c}, Fel: ${w}, Ledtrådar: ${h}<br/>Träff%: ${acc}% · RT: ${rt}s`;
+
+    body.append(nameEl, sm);
+    card.append(thumbWrap, body);
+    list.append(card);
+  });
+
+  box.innerHTML='';
+  box.append(title, list);
+}
+
+/* ======= Quiz ======= */
+function buildPool(){
+  let pool=photos.filter(p=>p.name);
+  if(filterGender!=='all') pool=pool.filter(p=>p.gender===filterGender);
+  return pool;
+}
+function choiceCountFor(p){
+  if(!autoChoices) return 6;
+  const lvl = (p.stats?.level)||0;
+  return lvl<=0 ? 4 : (lvl===1 ? 6 : 8);
+}
+function startQuiz(){
+  const pool=buildPool();
+  if(pool.length<4){ alert('Behöver minst 4 namnsatta bilder (efter filtret).'); return; }
+  quizList=shuffle(pool.slice()); quizIndex=0; wrongs=[]; hintLevel=0; usedHint=false;
+  $("#manage").style.display='none'; $("#quiz").style.display='block'; $("#review").style.display='none';
+  renderQuestion(true);
+}
+function setHint(text, pane='img'){ const id = pane==='text' ? "#hintline-text" : "#hintline"; const h=$(id); h.innerHTML=text||""; }
+function clearTimer(){ if(timerId){ clearInterval(timerId); timerId=null; const pill=document.querySelector('#timer-pill'); if(pill) pill.remove(); } }
+function startTimerIfNeeded(q){
+  clearTimer();
+  const strong = (q.stats?.level||0) >= 2;
+  if(!timeChallenge || !strong) return;
+  let left = 5;
+  const pill=document.createElement('span'); pill.id='timer-pill'; pill.className='pill'; pill.textContent=`⏱️ ${left}s`;
+  document.querySelector('.controls').append(pill);
+  timerId = setInterval(()=>{
+    left--; pill.textContent=`⏱️ ${left}s`;
+    if(left<=0){ clearTimer(); timeOutFail(q); }
+  },1000);
+}
+function timeOutFail(q){
+  const rtSec = (now()-qStart)/1000;
+  usedHint = false;
+  updateStats(q,{correct:false, rtSec});
+  const fb=$("#feedback");
+  fb.innerHTML=`<span class='bad'>Tiden ute.</span> Rätt svar: <b style="font-size:18px">${q.name}</b>`;
+  if(!wrongs.find(p=>p.id===q.id)) wrongs.push(q);
+  scheduleSoon(q);
+  setTimeout(()=>{ nextQuestion(); }, 2000);
+}
+function scheduleSoon(item){
+  const insertAt = Math.min(quizIndex + 2, quizList.length);
+  const alreadyAfter = quizList.slice(quizIndex+1).find(p=>p.id===item.id);
+  if(!alreadyAfter) quizList.splice(insertAt,0,item);
+}
+function nextQuestion(){
+  quizIndex++; hintLevel=0; usedHint=false; setHint("", 'img'); setHint("", 'text'); clearTimer();
+  if(quizIndex>=quizList.length){
+    $("#progress").textContent='Färdig!'; $("#progressBar").style.width='100%';
+    ["choices","img-choices"].forEach(id=>$("#"+id).innerHTML='');
+    ["quiz-img","quiz-name","quiz-img-text"].forEach(id=>{
+      const el=$("#"+id);
+      if(el && el.tagName==="IMG") el.src='';
+      else if(el) el.textContent='';
+    });
+    setHint("", 'img'); setHint("", 'text');
+    showReview();
+    return;
+  }
+  renderQuestion();
+}
+function nameMask(name, letters){
+  const clean=(name||"").trim();
+  if(clean.length===0) return "";
+  const shown = clean.slice(0, Math.min(letters, clean.length));
+  const rest = clean.slice(shown.length).replace(/./g, "_");
+  return `<b>${shown}</b>${rest.split("").join(" ")}`;
+}
+function pickDistractors(current, pool, count){
+  let candidates;
+  if((localStorage.getItem('sameGenderOnly')==='true') && (current.gender==='m' || current.gender==='f')){
+    candidates = pool.filter(p=>p.id!==current.id && p.gender===current.gender);
+  } else {
+    candidates = pool.filter(p=>p.id!==current.id);
+  }
+  candidates = shuffle(candidates);
+  let out=candidates.slice(0,count);
+  if(out.length<count){
+    const extra = shuffle(pool.filter(p=>p.id!==current.id && !out.find(x=>x.id===p.id)));
+    out = out.concat(extra.slice(0, count - out.length));
+  }
+  return out.slice(0,count);
+}
+function gridColsFor(n){
+  if(n<=4) return 'repeat(2,minmax(100px,1fr))';
+  if(n<=6) return 'repeat(3,minmax(100px,1fr))';
+  return 'repeat(4,minmax(90px,1fr))';
+}
+function renderQuestion(initial=false){
+  setProgress();
+  $("#feedback").textContent='';
+  setHint("", 'img'); setHint("", 'text'); hintLevel=0; usedHint=false; clearTimer();
+  $("#review").style.display='none';
+  $("#btn-hint").style.display = 'inline-flex';
+
+  const q=quizList[quizIndex];
+  const basePool=buildPool();
+  qStart=now();
+  startTimerIfNeeded(q);
+
+  if(quizMode==='img2name'){
+    $("#pane-img2name").style.display='block'; $("#pane-name2img").style.display='none'; $("#pane-text").style.display='none';
+    const quizImg=$("#quiz-img"); quizImg.src=q.data;
+    const quizPanState={posX:(typeof q.posX==='number'?q.posX:50), posY:(typeof q.posY==='number'?q.posY:50), zoom:(typeof q.zoom==='number'?q.zoom:1)};
+    applyPanZoomEl(quizImg, quizPanState);
+
+    const cnt = Math.min(choiceCountFor(q)-1, basePool.length-1);
+    const distractors=pickDistractors(q, basePool, cnt);
+    const opts=shuffle([q, ...distractors]);
+    const box=$("#choices"); box.innerHTML=''; box.style.gridTemplateColumns=gridColsFor(opts.length);
+    opts.forEach(opt=>{
+      const b=document.createElement('div'); b.className='choice'; b.textContent=opt.name;
+      b.onclick=()=>grade(opt.id===q.id, q, b, box);
+      box.append(b);
+    });
+    $("#btn-hint").onclick=()=>showHintImgToName(q);
+
+  } else if(quizMode==='name2img'){
+    $("#pane-img2name").style.display='none'; $("#pane-name2img").style.display='block'; $("#pane-text").style.display='none';
+    $("#quiz-name").textContent=q.name;
+
+    const cnt = Math.min(choiceCountFor(q)-1, basePool.length-1);
+    const distractors=pickDistractors(q, basePool, cnt);
+    const opts=shuffle([q, ...distractors]);
+    const box=$("#img-choices"); box.innerHTML=''; box.style.gridTemplateColumns=gridColsFor(opts.length);
+    opts.forEach(opt=>{
+      const d=document.createElement('div'); d.className='imgChoice';
+      const pan=document.createElement('div'); pan.className='thumbPan';
+      const im=document.createElement('img'); im.src=opt.data; applyPanZoomEl(im, opt);
+      pan.append(im);
+      d.append(pan);
+      d.onclick=()=>grade(opt.id===q.id, q, d, box);
+      box.append(d);
+    });
+    $("#btn-hint").onclick=()=>showHintNameToImg(q, box);
+
+  } else { // img2text
+    $("#pane-img2name").style.display='none'; $("#pane-name2img").style.display='none'; $("#pane-text").style.display='block';
+    const img=$("#quiz-img-text"); img.src=q.data;
+    const quizPanState={posX:(typeof q.posX==='number'?q.posX:50), posY:(typeof q.posY==='number'?q.posY:50), zoom:(typeof q.zoom==='number'?q.zoom:1)};
+    applyPanZoomEl(img, quizPanState);
+
+    const input=$("#answer-input"); input.value=''; input.focus();
+    const submit=()=>checkTextAnswer(q, input.value);
+    $("#btn-submit").onclick=submit;
+    $("#btn-skip").onclick=()=>{ usedHint=false; updateStats(q,{correct:false, rtSec:(now()-qStart)/1000}); if(!wrongs.find(p=>p.id===q.id)) wrongs.push(q); scheduleSoon(q); nextQuestion(); };
+    input.onkeydown=(e)=>{ if(e.key==='Enter'){ submit(); } };
+    $("#btn-hint").onclick=()=>showHintImgToText(q);
+  }
+}
+
+/* ======= Ledtrådar ======= */
+function showHintImgToName(q){
+  usedHint=true;
+  const name=q.name||"", memo=q.mnemonic||"";
+  if(!name && !memo) return;
+  if(hintLevel===0){ hintLevel=1; setHint(nameMask(name,1),'img'); return; }
+  if(hintLevel===1){ hintLevel=2; setHint(nameMask(name,2),'img'); return; }
+  if(hintLevel===2){ hintLevel=3; if(memo){ setHint(`<i>Minnesregel:</i> ${memo}`,'img'); return; } }
+  hintLevel=4;
+  setHint(`<b>${name}</b>`, 'img');
+  const fb=$("#feedback");
+  fb.innerHTML=`<span class='bad'>Fel (ledtråd).</span> Rätt svar: <b style="font-size:18px">${q.name}</b>`;
+  updateStats(q,{correct:false, rtSec:(now()-qStart)/1000});
+  if(!wrongs.find(p=>p.id===q.id)) wrongs.push(q);
+  scheduleSoon(q);
+  setTimeout(()=>{ nextQuestion(); }, 2000);
+}
+function showHintNameToImg(q, box){
+  usedHint=true;
+  const name=q.name||"", memo=q.mnemonic||"";
+  if(hintLevel===0){ hintLevel=1; setHint(nameMask(name,1),'img'); return; }
+  if(hintLevel===1){
+    hintLevel=2;
+    const all=[...box.children];
+    const correctEl=findCorrectImgEl(q, all);
+    const wrongsEls=all.filter(el=>el!==correctEl && !el.classList.contains('disabled'));
+    shuffle(wrongsEls).slice(0,2).forEach(el=>el.classList.add('disabled'));
+    setHint("Två felaktiga bilder borttagna",'img');
+    return;
+  }
+  if(hintLevel===2){ hintLevel=3; if(memo){ setHint(`<i>Minnesregel:</i> ${memo}`,'img'); return; } }
+  hintLevel=4;
+  showCorrectOverlay(q, box);
+  const fb=$("#feedback");
+  fb.innerHTML=`<span class='bad'>Fel (ledtråd).</span> Rätt bild markerad.`;
+  updateStats(q,{correct:false, rtSec:(now()-qStart)/1000});
+  if(!wrongs.find(p=>p.id===q.id)) wrongs.push(q);
+  scheduleSoon(q);
+  setTimeout(()=>{ nextQuestion(); }, 2000);
+}
+function showHintImgToText(q){
+  usedHint=true;
+  const name=q.name||"", memo=q.mnemonic||"";
+  if(!name && !memo) return;
+  if(hintLevel===0){ hintLevel=1; setHint(nameMask(name,1),'text'); return; }
+  if(hintLevel===1){ hintLevel=2; setHint(nameMask(name,2),'text'); return; }
+  if(hintLevel===2){ hintLevel=3; if(memo){ setHint(`<i>Minnesregel:</i> ${memo}`,'text'); return; } }
+  hintLevel=4;
+  setHint(`<b>${name}</b>`, 'text');
+  const fb=$("#feedback");
+  fb.innerHTML=`<span class='bad'>Fel (ledtråd).</span> Rätt svar: <b style="font-size:18px">${q.name}</b>`;
+  updateStats(q,{correct:false, rtSec:(now()-qStart)/1000});
+  if(!wrongs.find(p=>p.id===q.id)) wrongs.push(q);
+  scheduleSoon(q);
+  setTimeout(()=>{ nextQuestion(); }, 2000);
+}
+
+/* ======= Hjälpare för Namn→Bild ======= */
+function findCorrectImgEl(q, elements){
+  return elements.find(el=>{
+    const img=el.querySelector('img');
+    const a=document.createElement('a'); a.href=(q.data||""); const target=a.href;
+    const b=document.createElement('a'); b.href=(img?.src||""); const src=b.href;
+    return src===target;
+  });
+}
+function showCorrectOverlay(q, box){
+  const all=[...box.children];
+  const correctEl=findCorrectImgEl(q, all);
+  if(!correctEl) return;
+  correctEl.classList.add('correct');
+  const tp = correctEl.querySelector('.thumbPan');
+  if(!tp) return;
+  const ov=document.createElement('div');
+  ov.className='nameOverlay';
+  ov.textContent=q.name;
+  tp.append(ov);
+  const cd=document.createElement('div');
+  cd.className='countdownPill';
+  tp.append(cd);
+  let t=10; // 10 x 100ms = 1.0s
+  cd.textContent='1.0s';
+  const interval=setInterval(()=>{
+    t--;
+    cd.textContent=(t/10).toFixed(1)+'s';
+    if(t<=0){ clearInterval(interval); }
+  },100);
+}
+
+/* ======= Rättning ======= */
+function grade(ok, q, clicked, box){
+  clearTimer();
+  const rtSec=(now()-qStart)/1000;
+  const fb=$("#feedback");
+  if(ok){
+    if(clicked) clicked.classList.add('correct');
+    fb.textContent='Rätt!'; fb.className='feedback ok';
+    updateStats(q,{correct:true, rtSec});
+    setTimeout(()=>{ nextQuestion(); }, 800);
+  }else{
+    if(clicked) clicked.classList.add('wrong');
+    if(quizMode==='name2img' && box){ showCorrectOverlay(q, box); }
+    fb.innerHTML=`<span class='bad'>Fel.</span> Rätt svar: <b style="font-size:18px">${q.name}</b>`;
+    updateStats(q,{correct:false, rtSec});
+    if(!wrongs.find(p=>p.id===q.id)) wrongs.push(q);
+    scheduleSoon(q);
+    setTimeout(()=>{ nextQuestion(); }, 2000);
+  }
+  if(box) Array.from(box.children).forEach(c=>c.style.pointerEvents='none');
+}
+function checkTextAnswer(q, inputVal){
+  clearTimer();
+  const rtSec=(now()-qStart)/1000;
+  if(!inputVal || !inputVal.trim()){
+    updateStats(q,{correct:false, rtSec});
+    if(!wrongs.find(p=>p.id===q.id)) wrongs.push(q);
+    scheduleSoon(q);
+    nextQuestion(); 
+    return;
+  }
+  const ok = isFuzzyMatch(inputVal, q.name);
+  const fb=$("#feedback");
+  if(ok){
+    fb.textContent='Rätt!'; fb.className='feedback ok';
+    updateStats(q,{correct:true, rtSec});
+    setTimeout(()=>{ nextQuestion(); }, 800);
+  }else{
+    fb.innerHTML=`<span class='bad'>Fel.</span> Rätt svar: <b style="font-size:18px">${q.name}</b>`;
+    updateStats(q,{correct:false, rtSec});
+    if(!wrongs.find(p=>p.id===q.id)) wrongs.push(q);
+    scheduleSoon(q);
+    setTimeout(()=>{ nextQuestion(); }, 2000);
+  }
+}
+
+/* ======= Genomgångsläge ======= */
+function showReview(){
+  $("#pane-img2name").style.display='none';
+  $("#pane-name2img").style.display='none';
+  $("#pane-text").style.display='none';
+  $("#btn-hint").style.display='none';
+  clearTimer();
+
+  const grid=$("#review-grid");
+  grid.innerHTML='';
+  if(wrongs.length===0){
+    const info=document.createElement('div');
+    info.style.textAlign='center';
+    info.style.opacity='0.9';
+    info.textContent='Inga fel i denna omgång 🎉';
+    grid.append(info);
+  }else{
+    wrongs.forEach(p=>{
+      const card=document.createElement('div'); card.className='revCard';
+      const img=document.createElement('img'); img.src=p.data; applyPanZoomEl(img,p);
+      const name=document.createElement('div'); name.className='revName'; name.textContent=p.name||'(saknar namn)';
+      card.append(img,name); grid.append(card);
+    });
+  }
+  $("#review").style.display='block';
+}
+function hideReview(){ $("#review").style.display='none'; }
+
+/* ======= Events ======= */
+$("#mode-manage").onclick=()=>{ $("#quiz").style.display='none'; $("#manage").style.display='block'; renderStats(); };
+$("#mode-quiz").onclick=()=>{ quizMode='img2name'; startQuiz(); };
+$("#qmode-img2name").onclick=()=>{ quizMode='img2name'; startQuiz(); };
+$("#qmode-name2img").onclick=()=>{ quizMode='name2img'; startQuiz(); };
+$("#qmode-text").onclick=()=>{ quizMode='img2text'; startQuiz(); };
+$("#redo").onclick=()=>startQuiz();
+
+$("#file").onchange=e=>handleFiles(e.target.files);
+
+// Export/Import
+$("#btn-export").onclick = exportJSON;
+
+// Importera = ERSÄTT ALLT
+$("#import-file").onchange = e => {
+  const f = e.target.files?.[0];
+  if(f) importJSONFile(f, 'replace');
+  e.target.value = "";
+};
+
+// Importera (slå ihop) = MERGE
+$("#import-merge-file").onchange = e => {
+  const f = e.target.files?.[0];
+  if(f) importJSONFile(f, 'merge');
+  e.target.value = "";
+};
+
+// Nollställ statistik (behåller bilder & namn)
+$("#btn-reset-stats").onclick=()=>{
+  if(!photos.length){ alert('Inga bilder.'); return; }
+  if(confirm('Nollställ all statistik (behåller bilder & namn)?')){
+    for(const p of photos){
+      p.stats={attempts:0, correct:0, wrong:0, hints:0, avgRT:0, level:0, streak:0, lastAt:Date.now()};
+    }
+    persistStats();
+    renderStats();
+    alert('Statistik nollställd.');
+  }
+};
+
+// Rensa (behåller statistik i localStorage)
+$("#btn-clear-all").onclick = ()=>{
+  if(!photos.length) { alert('Inget att rensa.'); return; }
+  if(confirm('Rensa alla bilder och namn? Statistik sparas lokalt.')){
+    photos = [];
+    wrongs = [];
+    quizList = [];
+    quizIndex = 0;
+    document.querySelector('#quiz').style.display='none';
+    document.querySelector('#manage').style.display='block';
+    renderGrid();
+    document.querySelector('#stats').innerHTML='';
+    countText();
+    alert('Rensat. Statistik finns kvar i webbläsaren.');
+  }
+};
+
+$("#headerFilter").addEventListener('click', (e)=>{
+  const b=e.target.closest('button'); if(!b) return;
+  filterGender=b.dataset.g; localStorage.setItem('filterGender', filterGender);
+  setHeaderFilterActive(); renderGrid();
+});
+$("#same-gender-only").checked = sameGenderOnly;
+$("#same-gender-only").addEventListener('change', e=>{
+  sameGenderOnly = e.target.checked;
+  localStorage.setItem('sameGenderOnly', sameGenderOnly);
+});
+$("#auto-choices").checked = autoChoices;
+$("#auto-choices").addEventListener('change', e=>{
+  autoChoices = e.target.checked;
+  localStorage.setItem('autoChoices', autoChoices);
+});
+$("#time-challenge").checked = timeChallenge;
+$("#time-challenge").addEventListener('change', e=>{
+  timeChallenge = e.target.checked;
+  localStorage.setItem('timeChallenge', timeChallenge);
+});
+$("#btn-stats").onclick=()=>{
+  const box=$("#stats");
+  box.style.display = box.style.display==='none' || !box.style.display ? 'block' : 'none';
+  renderStats();
+};
+
+const grid=$("#grid");
+grid.addEventListener('dragover',ev=>{ev.preventDefault(); grid.setAttribute('dragover','');});
+grid.addEventListener('dragleave',()=>{grid.removeAttribute('dragover');});
+grid.addEventListener('drop',ev=>{ev.preventDefault(); grid.removeAttribute('dragover'); const files=ev.dataTransfer.files; if(files?.length) handleFiles(files);});
+
+// Review-knappar
+$("#btn-review-repeat").onclick=()=>{
+  if(wrongs.length===0){ alert("Inga fel att öva på! 🎉"); return; }
+  quizList = shuffle(wrongs.slice());
+  wrongs = [];
+  quizIndex = 0;
+  hideReview();
+  setProgress();
+  renderQuestion(true);
+};
+$("#btn-review-back").onclick=()=>{
+  hideReview();
+  $("#quiz").style.display='none';
+  $("#manage").style.display='block';
+  renderStats();
+};
+
+/* ======= Init ======= */
+(function init(){
+  setHeaderFilterActive();
+  $("#stats").style.display='none';
+  mergeStatsFromStorage();
+  renderGrid();
+})();
+</script>
+</body>
+</html>
