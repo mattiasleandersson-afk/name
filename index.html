@@ -55,7 +55,7 @@
   .card{border:1px solid var(--muted);border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)), #091427;
     display:flex;flex-direction:column;overflow:hidden;transition:transform .15s ease, box-shadow .15s ease}
   .card:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.35)}
-  .pan{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;cursor:grab;background:#0b1222 touch-action: none;}
+  .pan{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;cursor:grab;background:#0b1222 touch-action: none; overscroll-behavior: contain;}
   .pan:active{cursor:grabbing}
   .pan img{
     position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;user-select:none;pointer-events:none;transform-origin:center center;
@@ -442,9 +442,8 @@ function touchDistance(t1, t2){
 
 pan.addEventListener('touchstart', (e) => {
   if(!e.touches || e.touches.length === 0) return;
-  e.preventDefault();
+  e.preventDefault(); // stoppa sid-scroll i pan
 
-  const rect = pan.getBoundingClientRect();
   if(e.touches.length === 1){
     // Drag
     const t = e.touches[0];
@@ -464,14 +463,15 @@ pan.addEventListener('touchstart', (e) => {
 
 pan.addEventListener('touchmove', (e) => {
   if(!tState.mode) return;
-  e.preventDefault();
+  e.preventDefault(); // viktigt för iOS
 
   const rect = pan.getBoundingClientRect();
+
   if(tState.mode === 'drag' && e.touches.length === 1){
     const t = e.touches[0];
     const dx = t.clientX - tState.startX;
     const dy = t.clientY - tState.startY;
-    // översätt pixel-drag till %-förskjutning relativt behållarens storlek
+    // översätt pixel-drag till %-förskjutning relativt pan
     p.posX = clamp(tState.startPosX - (dx/rect.width)*100, 0, 100);
     p.posY = clamp(tState.startPosY - (dy/rect.height)*100, 0, 100);
     applyPanZoomEl(img, p);
@@ -483,8 +483,9 @@ pan.addEventListener('touchmove', (e) => {
   }
 }, { passive: false });
 
-pan.addEventListener('touchend', () => {
-  if(!e?.touches || e.touches.length === 0){
+pan.addEventListener('touchend', (e) => {
+  // ✔️ rätta: ta emot e och använd e.touches
+  if(!e.touches || e.touches.length === 0){
     tState.mode = null;
     pan.style.cursor = 'grab';
   } else if(e.touches.length === 1 && tState.mode === 'pinch'){
