@@ -32,7 +32,6 @@ Ett enkelt träningsprogram för att lära sig namn kopplade till bilder.
   - **Nollställ statistik**: nollställer enbart statistiken.
   - **Rensa**: tar bort alla bilder & namn, men behåller statistik.
 
-## ❓ Hjälp
-Om du kör fast, kontakta mig eller läs denna README på GitHub.
-
+## ❓ Hjälp - använda olika enheter
+Exportera mellan olika enheter. Alla filer lagras genom "export" lokalt som en json-fil. Denna kan du sedan kopiera mellan enheter för att öppna genom "import" på din andra enhet. 
 ---
