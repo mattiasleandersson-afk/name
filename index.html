@@ -40,6 +40,7 @@
   .danger{background:linear-gradient(180deg, var(--danger), var(--danger-2));border-color:transparent;color:#fff}
 
   .pill{background:#1b2745;border:1px solid var(--muted);padding:6px 10px;border-radius:999px}
+  .groupSel{border:1px solid var(--muted-2);background:#14213b;color:var(--ink);padding:8px 12px;border-radius:10px}
 
   .genderFilter{display:inline-flex;border:1px solid var(--muted-2);border-radius:999px;overflow:hidden}
   .genderFilter button{border:0;background:transparent;color:var(--ink);padding:8px 12px;font-size:13px;cursor:pointer}
@@ -164,6 +165,9 @@
     <header>
       <h1>📸 Namnträning</h1>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <select id="group-select" class="groupSel"></select>
+        <button class="btn" id="btn-add-group">➕ Ny grupp</button>
+        <button class="btn danger" id="btn-del-group">🗑️ Ta bort grupp</button>
         <button class="btn" id="mode-manage"><span class="icon">🗂️</span>Hantera</button>
         <button class="btn primary" id="mode-quiz"><span class="icon">🧠</span>Quiz</button>
         <div class="genderFilter" id="headerFilter">
@@ -276,7 +280,10 @@
 
 <script>
 /* ======= State ======= */
-let photos=[]; // {id,data,name,gender,posX,posY,zoom,mnemonic,stats}
+let groups=[]; // {id,name,photos:[...]}
+let currentGroupId=localStorage.getItem('currentGroupId')||null;
+let currentGroup=null;
+let photos=[]; // alias för currentGroup.photos
 let filterGender=localStorage.getItem('filterGender')||'all';
 let sameGenderOnly=(localStorage.getItem('sameGenderOnly')==='true');
 let autoChoices=(localStorage.getItem('autoChoices')!=='false'); // default true
@@ -285,6 +292,40 @@ let quizMode='img2name'; // 'img2name'|'name2img'|'img2text'
 let quizList=[], quizIndex=0, wrongs=[];
 let hintLevel=0, usedHint=false;
 let qStart=0, timerId=null;
+
+/* ======= Groups ======= */
+const GROUPS_KEY='namntraning_groups_v1';
+function loadGroups(){
+  try{ groups=JSON.parse(localStorage.getItem(GROUPS_KEY))||[]; }catch{ groups=[]; }
+  if(groups.length===0) groups=[{id:uid(), name:'Grupp 1', photos:[]}];
+  if(!currentGroupId) currentGroupId=groups[0].id;
+  currentGroup=groups.find(g=>g.id===currentGroupId)||groups[0];
+  currentGroupId=currentGroup.id;
+  photos=currentGroup.photos;
+}
+function persistGroups(){
+  try{ localStorage.setItem(GROUPS_KEY, JSON.stringify(groups)); }catch{}
+  localStorage.setItem('currentGroupId', currentGroupId);
+}
+function updateGroupUI(){
+  const sel=$('#group-select'); if(!sel) return;
+  sel.innerHTML='';
+  for(const g of groups){
+    const opt=document.createElement('option');
+    opt.value=g.id; opt.textContent=g.name;
+    sel.append(opt);
+  }
+  sel.value=currentGroupId;
+  countText();
+}
+function switchGroup(id){
+  const g=groups.find(gr=>gr.id===id); if(!g) return;
+  currentGroupId=id; currentGroup=g; photos=currentGroup.photos;
+  updateGroupUI();
+  renderGrid();
+  renderStats();
+  persistGroups();
+}
 
 /* ======= Storage (statistik) ======= */
 const STATS_KEY='namntraning_stats_v1';
@@ -297,18 +338,20 @@ function loadStatsFromStorage(){
 }
 function persistStats(){
   const map={};
-  for(const p of photos){
-    if(!p.id) continue;
-    if(p.stats){
-      map[p.id]=p.stats;
+  for(const g of groups){
+    for(const p of g.photos){
+      if(!p.id) continue;
+      if(p.stats) map[p.id]=p.stats;
     }
   }
   try{ localStorage.setItem(STATS_KEY, JSON.stringify(map)); }catch{}
 }
 function mergeStatsFromStorage(){
   const map=loadStatsFromStorage();
-  for(const p of photos){
-    if(map[p.id]) p.stats = {...map[p.id]};
+  for(const g of groups){
+    for(const p of g.photos){
+      if(map[p.id]) p.stats={...map[p.id]};
+    }
   }
 }
 
@@ -417,16 +460,16 @@ function renderGrid(){
       p.posY = clamp(startPosY - (dy/rect.height)*100, 0, 100);
       applyPanZoomEl(img,p);
     });
-    window.addEventListener('mouseup',()=>{ dragging=false; pan.style.cursor='grab'; });
+    window.addEventListener('mouseup',()=>{ dragging=false; pan.style.cursor='grab'; persistGroups(); });
 
     // Wheel zoom
     pan.addEventListener('wheel',e=>{
       e.preventDefault();
-      let z=p.zoom||1; z += (e.deltaY<0)?0.1:-0.1; p.zoom=clamp(z,1,3); applyPanZoomEl(img,p);
+      let z=p.zoom||1; z += (e.deltaY<0)?0.1:-0.1; p.zoom=clamp(z,1,3); applyPanZoomEl(img,p); persistGroups();
     }, {passive:false});
 
     // Reset
-    pan.addEventListener('dblclick',()=>{ p.posX=50;p.posY=50;p.zoom=1; applyPanZoomEl(img,p); 
+    pan.addEventListener('dblclick',()=>{ p.posX=50;p.posY=50;p.zoom=1; applyPanZoomEl(img,p); persistGroups();
     // --- Touch (mobil): drag + pinch zoom ---
     let tState = {
       mode: null,           // 'drag' | 'pinch'
@@ -486,6 +529,7 @@ function renderGrid(){
       if(!e.touches || e.touches.length === 0){
         tState.mode = null;
         pan.style.cursor = 'grab';
+        persistGroups();
       } else if(e.touches.length === 1 && tState.mode === 'pinch'){
         tState.mode = 'drag';
         tState.startX = e.touches[0].clientX;
@@ -499,17 +543,17 @@ function renderGrid(){
     // Namn + kön + mnemonic + rensa-namn
     const namebox=document.createElement('div'); namebox.className='namebox';
     const input=document.createElement('input'); input.placeholder='Skriv namn här…'; input.value=p.name||'';
-    input.addEventListener('input',()=>{ p.name=input.value; overlay.textContent=p.name||'Inget namn'; });
-    const memo=document.createElement('textarea'); memo.placeholder='Minnesregel (valfritt)…'; memo.value=p.mnemonic||''; memo.addEventListener('input',()=>{ p.mnemonic=memo.value; });
+    input.addEventListener('input',()=>{ p.name=input.value; overlay.textContent=p.name||'Inget namn'; persistGroups(); });
+    const memo=document.createElement('textarea'); memo.placeholder='Minnesregel (valfritt)…'; memo.value=p.mnemonic||''; memo.addEventListener('input',()=>{ p.mnemonic=memo.value; persistGroups(); });
     const genderRow=document.createElement('div'); genderRow.className='genderRow';
     const btnM=document.createElement('button'); btnM.textContent='Kille';
     const btnF=document.createElement('button'); btnF.textContent='Tjej';
     function refreshGender(){ btnM.classList.toggle('active-m',p.gender==='m'); btnF.classList.toggle('active-f',p.gender==='f'); }
-    btnM.onclick=()=>{ p.gender=(p.gender==='m'?null:'m'); refreshGender(); };
-    btnF.onclick=()=>{ p.gender=(p.gender==='f'?null:'f'); refreshGender(); };
+    btnM.onclick=()=>{ p.gender=(p.gender==='m'?null:'m'); refreshGender(); persistGroups(); };
+    btnF.onclick=()=>{ p.gender=(p.gender==='f'?null:'f'); refreshGender(); persistGroups(); };
     refreshGender(); genderRow.append(btnM,btnF);
     const clear=document.createElement('button'); clear.className='clear'; clear.textContent='✕ Rensa namn';
-    clear.onclick=()=>{ p.name=''; input.value=''; overlay.textContent='Inget namn'; };
+    clear.onclick=()=>{ p.name=''; input.value=''; overlay.textContent='Inget namn'; persistGroups(); };
     namebox.append(input, memo, genderRow, clear);
 
     card.append(pan, namebox);
@@ -536,16 +580,27 @@ async function handleFiles(files){
     photos.push({id:uid(), data, name:'', gender:null, posX:50, posY:50, zoom:1, mnemonic:'', stats:{attempts:0,correct:0,wrong:0,hints:0,avgRT:0,level:0,streak:0,lastAt:Date.now()}});
   }
   persistStats();
+  persistGroups();
   renderGrid();
 }
+function safePhoto(p){
+  return {
+    id:p.id,
+    data:p.data,
+    name:p.name||'',
+    gender:p.gender ?? null,
+    posX:p.posX ?? 50,
+    posY:p.posY ?? 50,
+    zoom:p.zoom ?? 1,
+    mnemonic:p.mnemonic || '',
+    stats:p.stats || {attempts:0,correct:0,wrong:0,hints:0,avgRT:0,level:0,streak:0,lastAt:Date.now()}
+  };
+}
 function exportJSON(){
-  const safePhotos = photos.map(p=>({
-    id: p.id, data: p.data, name: p.name||'',
-    gender: p.gender ?? null, posX: p.posX ?? 50, posY: p.posY ?? 50, zoom: p.zoom ?? 1,
-    mnemonic: p.mnemonic || '',
-    stats: p.stats || {attempts:0,correct:0,wrong:0,hints:0,avgRT:0,level:0,streak:0,lastAt:Date.now()}
-  }));
-  const blob=new Blob([JSON.stringify({photos:safePhotos}, null, 2)],{type:'application/json'});
+  const all = groups.length>1 && confirm('Exportera alla grupper?\nTryck OK för alla, Avbryt för endast aktuell.');
+  const gList = groups.map(g=>({id:g.id,name:g.name,photos:g.photos.map(safePhoto)}));
+  const data = all ? {groups:gList} : {groups:gList.filter(g=>g.id===currentGroupId)};
+  const blob=new Blob([JSON.stringify(data, null, 2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='namntraning-data.json'; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),500);
 }
@@ -565,20 +620,26 @@ function mergeTwoStats(a,b){
 }
 function parseIncoming(frResult){
   const obj=JSON.parse(frResult);
-  if(!obj || !Array.isArray(obj.photos)) throw new Error('Fel format (saknar photos)');
-  return obj.photos.map(p=>({
-    id:p.id||uid(), data:p.data, name:p.name||'', gender:p.gender??null,
-    posX: typeof p.posX==='number'?p.posX:50,
-    posY: typeof p.posY==='number'?p.posY:50,
-    zoom: typeof p.zoom==='number'?p.zoom:1,
-    mnemonic: p.mnemonic || '',
-    stats: p.stats || {attempts:0,correct:0,wrong:0,hints:0,avgRT:0,level:0,streak:0,lastAt:Date.now()}
-  }));
+  if(Array.isArray(obj.groups)){
+    return obj.groups.map(g=>({
+      id:g.id||uid(),
+      name:g.name||'Grupp',
+      photos:(g.photos||[]).map(p=>safePhoto({...p, id:p.id||uid()}))
+    }));
+  }
+  if(Array.isArray(obj.photos)){
+    return [{
+      id:uid(),
+      name: obj.name||'Importerad grupp',
+      photos: obj.photos.map(p=>safePhoto({...p, id:p.id||uid()}))
+    }];
+  }
+  throw new Error('Fel format (saknar groups/photos)');
 }
-function mergeInPlace(incoming){
+function mergeInPlace(target, incoming){
   let added=0, updated=0;
   for(const np of incoming){
-    const exists = photos.find(p=>p.data===np.data);
+    const exists = target.find(p=>p.data===np.data);
     if(exists){
       if(!exists.name && np.name) exists.name=np.name;
       if(!exists.gender && np.gender) exists.gender=np.gender;
@@ -589,27 +650,45 @@ function mergeInPlace(incoming){
       exists.stats = mergeTwoStats(exists.stats||{}, np.stats||{});
       updated++;
     }else{
-      if(photos.some(p=>p.id===np.id)) np.id=uid();
-      photos.push(np); added++;
+      if(target.some(p=>p.id===np.id)) np.id=uid();
+      target.push(np); added++;
     }
   }
-  persistStats();
-  renderGrid();
-  alert(`Import (sammanfogning) klar.\nTillagda: ${added}\nUppdaterade: ${updated}`);
+  return {added, updated};
 }
 function importJSONFile(file, mode='replace'){
   const fr=new FileReader();
   fr.onload=()=>{
     try{
-      const incoming = parseIncoming(fr.result);
+      const incomingGroups = parseIncoming(fr.result);
       if(mode==='merge'){
-        mergeInPlace(incoming);
+        let added=0, updated=0;
+        for(const ng of incomingGroups){
+          const existing = groups.find(g=>g.id===ng.id);
+          if(existing){
+            const r=mergeInPlace(existing.photos, ng.photos);
+            added+=r.added; updated+=r.updated;
+          }else{
+            groups.push(ng);
+            added+=ng.photos.length;
+          }
+        }
+        mergeStatsFromStorage();
+        persistGroups();
+        persistStats();
+        updateGroupUI();
+        switchGroup(currentGroupId);
+        alert(`Import (sammanfogning) klar.\nTillagda: ${added}\nUppdaterade: ${updated}`);
         return;
       }
       if(mode==='replace'){
-        photos = incoming;
-        mergeStatsFromStorage(); // behåll ev. lokal statistik per id
-        renderGrid();
+        groups = incomingGroups;
+        currentGroupId = groups[0]?.id || uid();
+        mergeStatsFromStorage();
+        persistGroups();
+        persistStats();
+        updateGroupUI();
+        switchGroup(currentGroupId);
         alert('Import klar (ersatte allt).');
         return;
       }
@@ -980,6 +1059,30 @@ function showReview(){
 function hideReview(){ $("#review").style.display='none'; }
 
 /* ======= Events ======= */
+$("#group-select").onchange=e=>switchGroup(e.target.value);
+$("#btn-add-group").onclick=()=>{
+  const name=prompt('Gruppnamn?');
+  if(!name) return;
+  const g={id:uid(), name, photos:[]};
+  groups.push(g);
+  updateGroupUI();
+  switchGroup(g.id);
+  persistGroups();
+};
+$("#btn-del-group").onclick=()=>{
+  if(!confirm('Ta bort denna grupp?')) return;
+  const idx=groups.findIndex(g=>g.id===currentGroupId);
+  if(idx===-1) return;
+  groups.splice(idx,1);
+  if(groups.length===0){
+    const g={id:uid(), name:'Grupp 1', photos:[]};
+    groups.push(g);
+  }
+  const id=groups[0].id;
+  updateGroupUI();
+  switchGroup(id);
+  persistGroups();
+};
 $("#mode-manage").onclick=()=>{ $("#quiz").style.display='none'; $("#manage").style.display='block'; renderStats(); };
 $("#mode-quiz").onclick=()=>{ quizMode='img2name'; startQuiz(); };
 $("#qmode-img2name").onclick=()=>{ quizMode='img2name'; startQuiz(); };
@@ -1014,6 +1117,7 @@ $("#btn-reset-stats").onclick=()=>{
       p.stats={attempts:0, correct:0, wrong:0, hints:0, avgRT:0, level:0, streak:0, lastAt:Date.now()};
     }
     persistStats();
+    persistGroups();
     renderStats();
     alert('Statistik nollställd.');
   }
@@ -1023,7 +1127,8 @@ $("#btn-reset-stats").onclick=()=>{
 $("#btn-clear-all").onclick = ()=>{
   if(!photos.length) { alert('Inget att rensa.'); return; }
   if(confirm('Rensa alla bilder och namn? Statistik sparas lokalt.')){
-    photos = [];
+    currentGroup.photos = [];
+    photos = currentGroup.photos;
     wrongs = [];
     quizList = [];
     quizIndex = 0;
@@ -1032,6 +1137,7 @@ $("#btn-clear-all").onclick = ()=>{
     renderGrid();
     document.querySelector('#stats').innerHTML='';
     countText();
+    persistGroups();
     alert('Rensat. Statistik finns kvar i webbläsaren.');
   }
 };
@@ -1086,6 +1192,9 @@ $("#btn-review-back").onclick=()=>{
 
 /* ======= Init ======= */
 (function init(){
+  loadGroups();
+  updateGroupUI();
+  persistGroups();
   setHeaderFilterActive();
   $("#stats").style.display='none';
   mergeStatsFromStorage();

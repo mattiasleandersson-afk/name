@@ -21,16 +21,50 @@ Ett enkelt träningsprogram för att lära sig namn kopplade till bilder.
    - Du får feedback om rätt/fel. Rätt svar visas vid fel.
    - Efter quizet visas en genomgång av de namn du missade, med möjlighet att träna på bara dem.
 
+## 📁 Grupper
+- Skapa flera grupper via rullgardinsmenyn högst upp.
+- Välj, skapa eller ta bort grupper. Vald grupp sparas lokalt i webbläsaren.
+
+### Exportera & importera
+- **Exportera**: sparar den aktiva gruppen som JSON. Om flera grupper finns kan du välja att exportera alla.
+- **Importera**: ersätter alla befintliga grupper med filens innehåll.
+- **Importera (slå ihop)**: lägger till grupper från filen och slår ihop med befintliga vid matchande id.
+
+### Filformat
+```json
+{
+  "groups": [
+    {
+      "id": "grp1",
+      "name": "Grupp 1",
+      "photos": [
+        {
+          "id": "...",
+          "data": "data:image/png;base64,...",
+          "name": "Anna",
+          "gender": null,
+          "posX": 50,
+          "posY": 50,
+          "zoom": 1,
+          "mnemonic": "",
+          "stats": { "attempts":0, "correct":0, "wrong":0, "hints":0, "avgRT":0, "level":0, "streak":0, "lastAt":0 }
+        }
+      ]
+    }
+  ]
+}
+```
+
 ## 📊 Statistik
 - Varje person har statistik: försök, rätt/fel, ledtrådar, reaktionstid, svårighetsnivå.
 - Topp 5 svåraste visas under Statistik.
 - Statistik sparas lokalt i webbläsaren (LocalStorage).
 - Knappar:
-  - **Exportera**: spara data (JSON). Denna fil lagras lokalt på din dator, inget sparas online.
-  - **Importera**: ersätt allt med ny data.
-  - **Importera (slå ihop)**: kombinera ny data med befintlig.
+  - **Exportera**: spara grupper till JSON-fil.
+  - **Importera**: ersätt alla grupper med data från fil.
+  - **Importera (slå ihop)**: kombinera grupper från fil med befintliga.
   - **Nollställ statistik**: nollställer enbart statistiken.
-  - **Rensa**: tar bort alla bilder & namn, men behåller statistik.
+  - **Rensa**: tar bort alla bilder & namn i aktiv grupp, men behåller statistik.
 
 ## ❓ Hjälp - använda olika enheter
 Exportera mellan olika enheter. Alla filer lagras genom "export" lokalt som en json-fil. Denna kan du sedan kopiera mellan enheter för att öppna genom "import" på din andra enhet. 
